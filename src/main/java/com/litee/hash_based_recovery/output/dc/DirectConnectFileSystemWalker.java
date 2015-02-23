@@ -59,7 +59,7 @@ public class DirectConnectFileSystemWalker {
                 processDirectory(dir, rootElement);
             }
             else {
-                // TODO
+                System.out.println("ERROR: Not found or not a directory: " + dir.getAbsolutePath());
             }
         }
         TransformerFactory transformerFactory = TransformerFactory.newInstance();

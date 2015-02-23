@@ -27,7 +27,7 @@ public class Main {
 
     @Parameters(commandNames = "backup")
     public static class CommandBackup {
-        @Parameter(names = "-input")
+        @Parameter(names = "-input", variableArity = true)
         private List<String> input;
         @Parameter(names = "-output")
         private String output;
