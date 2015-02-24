@@ -44,7 +44,7 @@ public class BackupCommand {
         document = docBuilder.newDocument();
     }
 
-    public void processRoot(List<String> dirPaths, String outputFile) throws TransformerException, IOException {
+    public void process(List<String> dirPaths, String outputFile) throws TransformerException, IOException {
         assert dirPaths != null;
         assert document != null;
         Element rootElement = document.createElement("FileListing");
