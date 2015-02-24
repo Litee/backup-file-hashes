@@ -1,4 +1,4 @@
-package com.litee.hash_based_recovery.hashing;
+package com.litee.backup_file_hashes.hashing;
 
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;

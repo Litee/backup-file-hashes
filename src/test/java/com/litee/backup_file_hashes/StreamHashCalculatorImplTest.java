@@ -1,8 +1,8 @@
-package com.litee.hash_based_recovery;
+package com.litee.backup_file_hashes;
 
-import com.litee.hash_based_recovery.hashing.Hashes;
-import com.litee.hash_based_recovery.hashing.StreamHashCalculator;
-import com.litee.hash_based_recovery.hashing.StreamHashCalculatorImpl;
+import com.litee.backup_file_hashes.hashing.Hashes;
+import com.litee.backup_file_hashes.hashing.StreamHashCalculator;
+import com.litee.backup_file_hashes.hashing.StreamHashCalculatorImpl;
 import jonelo.sugar.util.Base32;
 import org.junit.Assert;
 import org.junit.Test;

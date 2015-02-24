@@ -1,4 +1,4 @@
-package com.litee.hash_based_recovery;
+package com.litee.backup_file_hashes;
 
 import java.io.File;
 

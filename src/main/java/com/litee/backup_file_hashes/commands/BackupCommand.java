@@ -1,7 +1,7 @@
-package com.litee.hash_based_recovery.output.dc;
+package com.litee.backup_file_hashes.commands;
 
-import com.litee.hash_based_recovery.FileMetaData;
-import com.litee.hash_based_recovery.FileMetadataCalculator;
+import com.litee.backup_file_hashes.FileMetaData;
+import com.litee.backup_file_hashes.FileMetadataCalculator;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -31,12 +31,12 @@ import java.util.concurrent.Future;
  * Date: 2015-02-23
  * Time: 12:39
  */
-public class DirectConnectFileSystemWalker {
+public class BackupCommand {
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final Document document;
     private FileMetadataCalculator fileMetadataCalculator;
 
-    public DirectConnectFileSystemWalker(FileMetadataCalculator fileMetadataCalculator) throws ParserConfigurationException {
+    public BackupCommand(FileMetadataCalculator fileMetadataCalculator) throws ParserConfigurationException {
         assert fileMetadataCalculator != null;
         this.fileMetadataCalculator = fileMetadataCalculator;
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -80,21 +80,25 @@ public class DirectConnectFileSystemWalker {
         parentElement.appendChild(childElement);
         assert dir.isDirectory();
         File[] dirs = dir.listFiles(File::isDirectory);
-        Arrays.sort(dirs);
-        for (File childDir : dirs) {
-            processDirectory(childDir, childElement);
+        if (dirs != null) {
+            Arrays.sort(dirs);
+            for (File childDir : dirs) {
+                processDirectory(childDir, childElement);
+            }
         }
         File[] files = dir.listFiles(File::isFile);
-        Arrays.sort(files);
-        Map<File, Future<FileMetaData>> futures = new LinkedHashMap<>();
-        for (File file : files) {
-            futures.put(file, executor.submit(() -> fileMetadataCalculator.processFile(file)));
-        }
-        for (Map.Entry<File, Future<FileMetaData>> fileFutureEntry : futures.entrySet()) {
-            try {
-                processFile(fileFutureEntry.getKey(), childElement, fileFutureEntry.getValue().get());
-            } catch (Exception e) {
-                e.printStackTrace();
+        if (files != null) {
+            Arrays.sort(files);
+            Map<File, Future<FileMetaData>> futures = new LinkedHashMap<>();
+            for (File file : files) {
+                futures.put(file, executor.submit(() -> fileMetadataCalculator.processFile(file)));
+            }
+            for (Map.Entry<File, Future<FileMetaData>> fileFutureEntry : futures.entrySet()) {
+                try {
+                    processFile(fileFutureEntry.getKey(), childElement, fileFutureEntry.getValue().get());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

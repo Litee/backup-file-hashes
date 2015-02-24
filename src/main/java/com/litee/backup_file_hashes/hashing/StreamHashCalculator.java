@@ -1,4 +1,4 @@
-package com.litee.hash_based_recovery.hashing;
+package com.litee.backup_file_hashes.hashing;
 
 import java.io.IOException;
 import java.io.InputStream;
