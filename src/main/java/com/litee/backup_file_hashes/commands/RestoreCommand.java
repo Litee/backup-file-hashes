@@ -3,6 +3,7 @@ package com.litee.backup_file_hashes.commands;
 import com.litee.backup_file_hashes.FileMetaData;
 import com.litee.backup_file_hashes.FileMetadataCalculator;
 import com.litee.backup_file_hashes.FileMetadataCalculatorImpl;
+import com.litee.backup_file_hashes.cli.Main;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,16 +17,11 @@ import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * User: Andrey
@@ -33,19 +29,16 @@ import java.util.concurrent.Executors;
  * Time: 12:39
  */
 public class RestoreCommand {
-    private static final ExecutorService executor = Executors.newFixedThreadPool(4);
-    private FileMetadataCalculator fileMetadataCalculator;
+    private FileMetadataCalculator fileMetadataCalculator = new FileMetadataCalculatorImpl();
 
-    public RestoreCommand() throws ParserConfigurationException {
-        assert fileMetadataCalculator != null;
-        this.fileMetadataCalculator = new FileMetadataCalculatorImpl();
-    }
-
-    public void process(List<String> inputDirs, String inputSnapshot, String outputRoot) throws TransformerException, IOException, ParserConfigurationException, SAXException {
-        assert inputDirs != null;
+    public void process(Main.RestoreCommandArguments commandArguments) throws TransformerException, IOException, ParserConfigurationException, SAXException {
+        assert commandArguments != null;
+        assert commandArguments.inputDir != null;
+        assert commandArguments.inputSnapshot != null;
+        assert commandArguments.outputRootDir != null;
         // Scan files
         HashMap<Long, List<Path>> files = new HashMap<>();
-        inputDirs.stream().forEach(inputDir -> {
+        commandArguments.inputDir.stream().forEach(inputDir -> {
             File dir = new File(inputDir);
             if (dir.exists() && dir.isDirectory()) {
                 try {
@@ -75,14 +68,18 @@ public class RestoreCommand {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document document;
-        try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(new FileInputStream(inputSnapshot))) {
+        try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(new FileInputStream(commandArguments.inputSnapshot))) {
             document = docBuilder.parse(inputStream);
         }
         Element rootElement = document.getDocumentElement();
-        processDirectory(new File(outputRoot), rootElement, files);
+        File rootDir = new File(commandArguments.outputRootDir);
+        if (commandArguments.restoreEmptyDirs) {
+            rootDir.mkdir();
+        }
+        processDirectory(rootDir, rootElement, files, commandArguments.restoreEmptyDirs);
     }
 
-    public void processDirectory(File dir, Element parentDirElement, HashMap<Long, List<Path>> files) {
+    public void processDirectory(File dir, Element parentDirElement, HashMap<Long, List<Path>> files, boolean restoreEmptyDirs) {
         assert dir != null;
         System.out.println("DEBUG: Processing directory " + dir);
         for (Node childNode = parentDirElement.getFirstChild(); childNode != null; childNode = childNode.getNextSibling()) {
@@ -91,8 +88,10 @@ public class RestoreCommand {
                 String nodeName = childElement.getNodeName();
                 File childFileSystemEntry = new File(dir, childElement.getAttribute("Name"));
                 if (nodeName.equals("Directory")) {
-                    childFileSystemEntry.mkdir();
-                    processDirectory(childFileSystemEntry, childElement, files);
+                    if (restoreEmptyDirs) {
+                        childFileSystemEntry.mkdir();
+                    }
+                    processDirectory(childFileSystemEntry, childElement, files, restoreEmptyDirs);
                 }
                 else if (nodeName.equals("File")) {
                     try {
@@ -113,6 +112,7 @@ public class RestoreCommand {
             for (Path path : paths) {
                 FileMetaData fileMetaData = fileMetadataCalculator.processFile(path.toFile());
                 if (fileMetaData.getTthAsBase32().equals(fileTTH)) {
+                    file.getParentFile().mkdirs();
                     Files.copy(path, file.toPath());
                 }
             }

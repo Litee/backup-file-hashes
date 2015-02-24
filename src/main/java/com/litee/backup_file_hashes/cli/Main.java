@@ -26,7 +26,7 @@ public class Main {
         }
         else if (jCommander.getParsedCommand().equals("restore")) {
             RestoreCommand command = new RestoreCommand();
-            command.process(restoreCommandArguments.inputDir, restoreCommandArguments.inputSnapshot, restoreCommandArguments.outputRootDir);
+            command.process(restoreCommandArguments);
         }
         System.out.println("Done!");
         System.exit(0);
@@ -44,19 +44,21 @@ public class Main {
 
     @Parameters(commandNames = "restore")
     public static class RestoreCommandArguments {
-        @Parameter(names = "-inputDir", variableArity = true)
-        private List<String> inputDir;
-        @Parameter(names = "-inputSnapshot")
-        private String inputSnapshot;
-        @Parameter(names = "-outputRootDir")
-        private String outputRootDir;
+        @Parameter(names = "-inputDir", required = true, variableArity = true)
+        public List<String> inputDir;
+        @Parameter(names = "-inputSnapshot", required = true)
+        public String inputSnapshot;
+        @Parameter(names = "-outputRootDir", required = true)
+        public String outputRootDir;
+        @Parameter(names = "-restoreEmptyDirs")
+        public boolean restoreEmptyDirs;
     }
 
     @Parameters(commandNames = "diff")
     public static class DiffCommandArguments {
         @Parameter(names = "-input", arity = 2)
-        private List<String> input;
+        public List<String> input;
         @Parameter(names = "-output")
-        private String output;
+        public String output;
     }
 }
