@@ -3,8 +3,6 @@ package com.litee.backup_file_hashes.cli;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.litee.backup_file_hashes.FileMetadataCalculator;
-import com.litee.backup_file_hashes.cache.FileMetadataCalculatorWithCacheImpl;
 import com.litee.backup_file_hashes.commands.BackupCommand;
 import com.litee.backup_file_hashes.commands.RestoreCommand;
 
@@ -13,6 +11,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws Exception {
+        System.out.println("Starting...");
         JCommander jCommander = new JCommander();
         BackupCommandArguments backupCommandArguments = new BackupCommandArguments();
         RestoreCommandArguments restoreCommandArguments = new RestoreCommandArguments();
@@ -20,9 +19,8 @@ public class Main {
         jCommander.addCommand(restoreCommandArguments);
         jCommander.parse(args);
         if (jCommander.getParsedCommand().equals("backup")) {
-            final FileMetadataCalculator fileMetadataCalculator = new FileMetadataCalculatorWithCacheImpl(backupCommandArguments.cacheDir);
-            BackupCommand command = new BackupCommand(fileMetadataCalculator);
-            command.process(backupCommandArguments.inputDir, backupCommandArguments.outputSnapshot);
+            BackupCommand command = new BackupCommand();
+            command.process(backupCommandArguments);
         }
         else if (jCommander.getParsedCommand().equals("restore")) {
             RestoreCommand command = new RestoreCommand();
@@ -35,11 +33,11 @@ public class Main {
     @Parameters(commandNames = "backup")
     public static class BackupCommandArguments {
         @Parameter(names = "-inputDir", required = true, variableArity = true)
-        private List<String> inputDir;
+        public List<String> inputDir;
         @Parameter(names = "-outputSnapshot", required = true)
-        private String outputSnapshot;
+        public String outputSnapshot;
         @Parameter(names = "-cacheDir")
-        private String cacheDir;
+        public String cacheDir;
     }
 
     @Parameters(commandNames = "restore")

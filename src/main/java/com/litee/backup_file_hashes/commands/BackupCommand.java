@@ -1,23 +1,21 @@
 package com.litee.backup_file_hashes.commands;
 
 import com.litee.backup_file_hashes.FileMetaData;
-import com.litee.backup_file_hashes.FileMetadataCalculator;
+import com.litee.backup_file_hashes.cache.FileMetadataCalculatorWithCacheImpl;
+import com.litee.backup_file_hashes.cli.Main;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,18 +31,14 @@ import java.util.concurrent.Future;
  */
 public class BackupCommand {
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
-    private final Document document;
-    private FileMetadataCalculator fileMetadataCalculator;
 
-    public BackupCommand(FileMetadataCalculator fileMetadataCalculator) throws ParserConfigurationException {
-        assert fileMetadataCalculator != null;
-        this.fileMetadataCalculator = fileMetadataCalculator;
+    public void process(Main.BackupCommandArguments args) throws Exception {
+        FileMetadataCalculatorWithCacheImpl fileMetadataCalculator = new FileMetadataCalculatorWithCacheImpl(args.cacheDir);
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        document = docBuilder.newDocument();
-    }
-
-    public void process(List<String> dirPaths, String outputFile) throws TransformerException, IOException {
+        Document document = docBuilder.newDocument();
+        List<String> dirPaths = args.inputDir;
+        String outputFile = args.outputSnapshot;
         assert dirPaths != null;
         assert document != null;
         Element rootElement = document.createElement("FileListing");
@@ -56,7 +50,7 @@ public class BackupCommand {
         for (String dirPath : dirPaths) {
             File dir = new File(dirPath);
             if (dir.exists() && dir.isDirectory()) {
-                processDirectory(dir, rootElement);
+                processDirectory(dir, fileMetadataCalculator, document, rootElement);
             }
             else {
                 System.out.println("ERROR: Not found or not a directory: " + dir.getAbsolutePath());
@@ -73,7 +67,7 @@ public class BackupCommand {
         }
     }
 
-    public void processDirectory(File dir, Element parentElement) {
+    public void processDirectory(File dir, FileMetadataCalculatorWithCacheImpl fileMetadataCalculator, Document document, Element parentElement) {
         assert dir != null;
         Element childElement = document.createElement("Directory");
         childElement.setAttribute("Name", dir.getName());
@@ -83,7 +77,7 @@ public class BackupCommand {
         if (dirs != null) {
             Arrays.sort(dirs);
             for (File childDir : dirs) {
-                processDirectory(childDir, childElement);
+                processDirectory(childDir, fileMetadataCalculator, document, childElement);
             }
         }
         File[] files = dir.listFiles(File::isFile);
@@ -95,7 +89,7 @@ public class BackupCommand {
             }
             for (Map.Entry<File, Future<FileMetaData>> fileFutureEntry : futures.entrySet()) {
                 try {
-                    processFile(fileFutureEntry.getKey(), childElement, fileFutureEntry.getValue().get());
+                    processFile(fileFutureEntry.getKey(), document, childElement, fileFutureEntry.getValue().get());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -103,7 +97,7 @@ public class BackupCommand {
         }
     }
 
-    public void processFile(File file, Element parentElement, FileMetaData fileMetaData) {
+    public void processFile(File file, Document document, Element parentElement, FileMetaData fileMetaData) {
         Element childElement = document.createElement("File");
         childElement.setAttribute("Name", file.getName());
         childElement.setAttribute("Size", String.valueOf(fileMetaData.getFileLength()));
