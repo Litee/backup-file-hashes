@@ -37,6 +37,7 @@ public class BackupCommand {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document document = docBuilder.newDocument();
+        document.setXmlStandalone(true);
         List<String> dirPaths = args.inputDir;
         String outputFile = args.outputSnapshot;
         assert dirPaths != null;
@@ -59,7 +60,6 @@ public class BackupCommand {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
         DOMSource source = new DOMSource(document);
         try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(new FileOutputStream(outputFile))) {
             StreamResult result = new StreamResult(outputStream);
