@@ -39,7 +39,7 @@ public class BackupCommand {
         Document document = docBuilder.newDocument();
         document.setXmlStandalone(true);
         List<String> dirPaths = args.inputDir;
-        String outputFile = args.outputSnapshot;
+        String outputFile = args.outputSnapshot == null ? "Me.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.xml.bz2" : args.outputSnapshot;
         assert dirPaths != null;
         assert document != null;
         Element rootElement = document.createElement("FileListing");

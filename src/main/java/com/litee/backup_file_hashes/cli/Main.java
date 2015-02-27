@@ -34,7 +34,7 @@ public class Main {
     public static class BackupCommandArguments {
         @Parameter(names = "-inputDir", required = true, variableArity = true)
         public List<String> inputDir;
-        @Parameter(names = "-outputSnapshot", required = true)
+        @Parameter(names = "-outputSnapshot")
         public String outputSnapshot;
         @Parameter(names = "-cacheDir")
         public String cacheDir;
