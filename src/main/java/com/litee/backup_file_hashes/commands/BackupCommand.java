@@ -1,6 +1,8 @@
 package com.litee.backup_file_hashes.commands;
 
 import com.litee.backup_file_hashes.FileMetaData;
+import com.litee.backup_file_hashes.FileMetadataCalculator;
+import com.litee.backup_file_hashes.FileMetadataCalculatorImpl;
 import com.litee.backup_file_hashes.cache.FileMetadataCalculatorWithCacheImpl;
 import com.litee.backup_file_hashes.cli.Main;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
@@ -33,18 +35,23 @@ public class BackupCommand {
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
 
     public void process(Main.BackupCommandArguments args) throws Exception {
-        FileMetadataCalculatorWithCacheImpl fileMetadataCalculator = new FileMetadataCalculatorWithCacheImpl(args.cacheDir);
+        assert args.inputDir != null;
+        FileMetadataCalculator fileMetadataCalculator;
+        if (args.cacheDir == null) {
+            fileMetadataCalculator = new FileMetadataCalculatorImpl();
+        }
+        else {
+            fileMetadataCalculator = new FileMetadataCalculatorWithCacheImpl(args.cacheDir);
+        }
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document document = docBuilder.newDocument();
         document.setXmlStandalone(true);
         List<String> dirPaths = args.inputDir;
         String outputFile = args.outputSnapshot == null ? "Me.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.xml.bz2" : args.outputSnapshot;
-        assert dirPaths != null;
-        assert document != null;
         Element rootElement = document.createElement("FileListing");
         rootElement.setAttribute("Version", "1");
-        rootElement.setAttribute("CID", "FLXGVEOUMVOMU");
+        rootElement.setAttribute("CID", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         rootElement.setAttribute("Base", "/");
         rootElement.setAttribute("Generator", "HashBasedRecovery");
         document.appendChild(rootElement);
@@ -67,7 +74,7 @@ public class BackupCommand {
         }
     }
 
-    public void processDirectory(File dir, FileMetadataCalculatorWithCacheImpl fileMetadataCalculator, Document document, Element parentElement) {
+    public void processDirectory(File dir, FileMetadataCalculator fileMetadataCalculator, Document document, Element parentElement) {
         assert dir != null;
         Element childElement = document.createElement("Directory");
         childElement.setAttribute("Name", dir.getName());
