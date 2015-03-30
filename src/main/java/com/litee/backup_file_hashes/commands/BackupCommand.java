@@ -9,8 +9,6 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -56,14 +54,7 @@ public class BackupCommand {
                 System.out.println("ERROR: Not found or not a directory: " + dir.getAbsolutePath());
             }
         }
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        DOMSource source = new DOMSource(document);
-        try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(new FileOutputStream(outputFile))) {
-            StreamResult result = new StreamResult(outputStream);
-            transformer.transform(source, result);
-        }
+        DirectConnectUtils.saveDocument(document, outputFile);
     }
 
     public void processDirectory(File dir, FileMetadataCalculator fileMetadataCalculator, Document document, Element parentElement) {
