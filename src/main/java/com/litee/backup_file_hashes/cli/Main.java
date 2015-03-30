@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.litee.backup_file_hashes.commands.BackupCommand;
+import com.litee.backup_file_hashes.commands.diff.DiffCommand;
 import com.litee.backup_file_hashes.commands.RestoreCommand;
 
 import java.util.List;
@@ -15,8 +16,10 @@ public class Main {
         JCommander jCommander = new JCommander();
         BackupCommandArguments backupCommandArguments = new BackupCommandArguments();
         RestoreCommandArguments restoreCommandArguments = new RestoreCommandArguments();
+        DiffCommandArguments diffCommandArguments = new DiffCommandArguments();
         jCommander.addCommand(backupCommandArguments);
         jCommander.addCommand(restoreCommandArguments);
+        jCommander.addCommand(diffCommandArguments);
         jCommander.parse(args);
         if (jCommander.getParsedCommand().equals("backup")) {
             BackupCommand command = new BackupCommand();
@@ -25,6 +28,10 @@ public class Main {
         else if (jCommander.getParsedCommand().equals("restore")) {
             RestoreCommand command = new RestoreCommand();
             command.process(restoreCommandArguments);
+        }
+        else if (jCommander.getParsedCommand().equals("diff")) {
+            DiffCommand command = new DiffCommand();
+            command.process(diffCommandArguments);
         }
         System.out.println("Done!");
         System.exit(0);
@@ -54,9 +61,11 @@ public class Main {
 
     @Parameters(commandNames = "diff")
     public static class DiffCommandArguments {
-        @Parameter(names = "-input", arity = 2)
-        public List<String> input;
-        @Parameter(names = "-output")
-        public String output;
+        @Parameter(names = "-newSnapshot", required = true)
+        public String newSnapshot;
+        @Parameter(names = "-oldSnapshot", required = true)
+        public String oldSnapshot;
+        @Parameter(names = "-outputSnapshot", required = true)
+        public String outputSnapshot;
     }
 }

@@ -43,18 +43,10 @@ public class BackupCommand {
         else {
             fileMetadataCalculator = new FileMetadataCalculatorWithCacheImpl(args.cacheDir);
         }
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document document = docBuilder.newDocument();
-        document.setXmlStandalone(true);
+        Document document = DirectConnectUtils.createDefaultDocument(DirectConnectUtils.DEFAULT_CID);
+        Element rootElement = document.getDocumentElement();
         List<String> dirPaths = args.inputDir;
         String outputFile = args.outputSnapshot == null ? "Me.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.xml.bz2" : args.outputSnapshot;
-        Element rootElement = document.createElement("FileListing");
-        rootElement.setAttribute("Version", "1");
-        rootElement.setAttribute("CID", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-        rootElement.setAttribute("Base", "/");
-        rootElement.setAttribute("Generator", "HashBasedRecovery");
-        document.appendChild(rootElement);
         for (String dirPath : dirPaths) {
             File dir = new File(dirPath);
             if (dir.exists() && dir.isDirectory()) {
